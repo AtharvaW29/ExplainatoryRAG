@@ -1,0 +1,59 @@
+[project]
+name = "explainatory-rag"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "AtharvaW29",email = "atharavawagh29101@gmail.com"}
+]
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi (>=0.138.0,<0.139.0)",
+    "uvicorn[standard] (>=0.49.0,<0.50.0)"
+]
+
+
+[dependency-groups]
+dev = [
+    "ruff (>=0.15.18,<0.16.0)",
+    "mypy (>=2.1.0,<3.0.0)",
+    "pre-commit (>=4.6.0,<5.0.0)"
+]
+
+[tool.ruff]
+line-length=79
+target-version = 'py312'
+
+[tool.ruff.lint]
+select = [
+  # Pyflakes
+  "F",
+  # pycodestyle
+  "E4",
+  "E7",
+  "E9",
+  # isort
+  "I",
+  # pep8-naming
+  "N",
+]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = "./src/"
+allow_untyped_globals = true
+check_untyped_defs = true
+disallow_any_decorated = true
+disallow_any_generics = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_untyped_defs = true
+ignore_missing_imports = false
+show_error_codes = true
+warn_return_any = true
+warn_unused_configs = true
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
