@@ -1,6 +1,9 @@
-from sqlalchemy import Boolean, String, select
+import uuid
+
+from sqlalchemy import Boolean, Column, String, select, text
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase
 
 from src.schemas.user import UserCreateSchema
 
@@ -12,10 +15,15 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(String(100))
-    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        server_default=text("gen_random_uuid()"),
+    )
+    name = Column(String(50), nullable=False)
+    email = Column(String(255), nullable=False, index=True)
+    is_active = Column(Boolean, default=True, nullable=False)
 
 
 async def db_get_user_by_id(db: AsyncSession, user_id: int) -> User | None:
