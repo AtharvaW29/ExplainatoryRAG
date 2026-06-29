@@ -13,7 +13,10 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from src.schemas.learner_profile import LearnerProfileCreate
+from src.schemas.learner_profile import (
+    LearnerProfileCreate,
+    LearnerProfilePatch,
+)
 
 
 class Base(DeclarativeBase):
@@ -66,4 +69,37 @@ async def db_create_learnerprofile(
         return new_profile
     except Exception:
         await db.rollback()
+        return None
+
+
+async def db_patch_learnerprofile(
+    db: AsyncSession, user_id: UUID, profile_data: LearnerProfilePatch
+) -> LearnerProfile | None:
+
+    try:
+        statement = select(LearnerProfile).where(
+            LearnerProfile.user_id == user_id
+        )
+
+        res = await db.execute(statement)
+
+        profile = res.scalar_one_or_none()
+
+        if not profile:
+            return None
+
+        for key, value in profile_data.model_dump(exclude_unset=True).items():
+            setattr(profile, key, value)
+
+        db.add(profile)
+
+        await db.commit()
+
+        await db.refresh(profile)
+
+        return profile
+
+    except Exception:
+        await db.rollback()
+
         return None
