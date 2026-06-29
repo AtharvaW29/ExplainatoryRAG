@@ -1,0 +1,29 @@
+CREATE CONSTRAINT concept_name_unique
+IF NOT EXISTS
+FOR (c:Concept)
+REQUIRE c.name IS UNIQUE;
+
+CREATE CONSTRAINT skill_name_unique
+IF NOT EXISTS
+FOR (s: Skill)
+REQUIRE s.name IS UNIQUE;
+
+CREATE CONSTRAINT misconception_name
+IF NOT EXISTS
+FOR (m:Misconception)
+REQUIRE m.title IS UNIQUE;
+
+CREATE CONSTRAINT resource_id
+IF NOT EXISTS
+FOR (r:LearningResource)
+REQUIRE r.id IS UNIQUE;
+
+CREATE CONSTRAINT explanation_id
+IF NOT EXISTS
+FOR (e:Explanation)
+REQUIRE e.id IS UNIQUE;
+
+CREATE CONSTRAINT user_id
+IF NOT EXISTS
+FOR (u:User)
+REQUIRE u.id IS UNIQUE;

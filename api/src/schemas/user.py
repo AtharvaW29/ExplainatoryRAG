@@ -1,6 +1,7 @@
-from uuid import UUID
+from typing import Optional
+from uuid import UUID, uuid4
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class UserSchema(BaseModel):
@@ -15,6 +16,14 @@ class UserSchema(BaseModel):
 class UserCreateSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: UUID
+    id: Optional[UUID] = Field(default_factory=uuid4)
     name: str
     email: str
+
+
+class UserPatchSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    name: Optional[str] = None
+    email: Optional[str] = None
+    is_active: Optional[bool] = None

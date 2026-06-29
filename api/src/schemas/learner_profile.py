@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -8,9 +8,13 @@ from pydantic import BaseModel, ConfigDict
 class LearnerProfileCreate(BaseModel):
     user_id: UUID
     academic_level: Optional[str] = None
+    institution: Optional[str] = None
+    major: Optional[str] = None
     learning_style: Optional[str] = None
     preferred_explanation_style: Optional[str] = None
-    domain: Optional[str] = None
+    preffered_difficulty: Optional[str] = None
+    domain: str
+    language: str
 
 
 class LearnerProfileResponse(BaseModel):
@@ -21,6 +25,8 @@ class LearnerProfileResponse(BaseModel):
     academic_level: Optional[str]
     learning_style: Optional[str]
     preferred_explanation_style: Optional[str]
-    domain: Optional[str]
+    preffered_difficulty: Optional[str]
+    domain: Optional[List[str]]
+    language: str
     created_at: datetime
     updated_at: datetime
