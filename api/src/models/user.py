@@ -1,22 +1,19 @@
 import uuid
+from uuid import UUID
 
 from sqlalchemy import Boolean, Column, String, select, text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import DeclarativeBase
 
+from src.database import Base
 from src.schemas.user import UserCreateSchema, UserPatchSchema
-
-
-class Base(DeclarativeBase):
-    pass
 
 
 class User(Base):
     __tablename__ = "users"
 
     id = Column(
-        UUID(as_uuid=True),
+        PG_UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
         server_default=text("gen_random_uuid()"),

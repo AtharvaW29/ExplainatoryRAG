@@ -1,9 +1,11 @@
-from fastapi import HTTPException
+from uuid import UUID
+
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.sql.sqltypes import UUID
 
 from src.models.learner_profile import (
     db_create_learnerprofile,
+    db_get_learner_profile_preferences,
     db_get_learnerprofile,
     db_patch_learnerprofile,
 )
@@ -24,6 +26,12 @@ class LearnerProfileController:
         validated = LearnerProfileCreate(**payload)
 
         profile = await db_create_learnerprofile(db, validated)
+
+        if profile is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to create leraner prfile due to a database constraint",
+            )
 
         return LearnerProfileResponse.model_validate(profile)
 
@@ -56,7 +64,7 @@ class LearnerProfileController:
         db: AsyncSession, user_id: UUID
     ) -> LearnerPreferencesResponse:
 
-        profile = await db_get_learnerprofile(db, user_id)
+        profile = await db_get_learner_profile_preferences(db, user_id)
 
         if not profile:
             raise HTTPException(404, "Profile not found")

@@ -34,6 +34,8 @@ class LearnerProfilePatch(BaseModel):
 
 
 class LearnerPreferencesResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     learning_style: Optional[str]
     preferred_explanation_style: Optional[str]
     preferred_difficulty: Optional[str]

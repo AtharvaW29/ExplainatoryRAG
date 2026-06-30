@@ -2,11 +2,8 @@ import uuid
 
 from sqlalchemy import Column, ForeignKey, Text, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
-from sqlalchemy.orm import DeclarativeBase
 
-
-class Base(DeclarativeBase):
-    pass
+from src.database import Base
 
 
 class DocumentChunk(Base):

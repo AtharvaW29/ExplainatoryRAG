@@ -1,6 +1,7 @@
+from uuid import UUID  # type: ignore
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.sql.sqltypes import UUID
 
 from src.controllers.user_controller import UserController
 from src.database import get_db

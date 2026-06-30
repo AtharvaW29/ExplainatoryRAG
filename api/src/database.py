@@ -7,8 +7,14 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+from sqlalchemy.orm import DeclarativeBase
 
 load_dotenv()
+
+
+class Base(DeclarativeBase):
+    pass
+
 
 DATABASE_URL = os.getenv("app_DB_URL")
 if not DATABASE_URL:

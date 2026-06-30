@@ -1,11 +1,8 @@
 from pgvector.sqlalchemy import Vector  # type: ignore
 from sqlalchemy import Column, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import DeclarativeBase
 
-
-class Base(DeclarativeBase):
-    pass
+from src.database import Base
 
 
 class ExplainationEmbedding(Base):

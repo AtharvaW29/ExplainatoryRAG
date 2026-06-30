@@ -1,6 +1,7 @@
+from uuid import UUID
+
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.sql.sqltypes import UUID
 
 from src.models.user import db_create_user, db_get_user_by_email, db_patch_user
 from src.schemas.user import UserCreateSchema, UserPatchSchema, UserSchema

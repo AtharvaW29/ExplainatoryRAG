@@ -2,11 +2,8 @@ import uuid
 
 from sqlalchemy import Column, DateTime, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import DeclarativeBase
 
-
-class Base(DeclarativeBase):
-    pass
+from src.database import Base
 
 
 class KnowledgeSource(Base):
