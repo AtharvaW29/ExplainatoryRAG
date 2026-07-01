@@ -1,5 +1,0 @@
-(:Skill{
-    id,
-    name,
-    descriptioon
-})

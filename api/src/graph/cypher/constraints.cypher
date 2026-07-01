@@ -13,6 +13,11 @@ IF NOT EXISTS
 FOR (m:Misconception)
 REQUIRE m.title IS UNIQUE;
 
+CREATE CONSTRAINT misconception_user
+IF NOT EXISTS
+FOR (m:Misconception)
+REQUIRE m.user_id IS UNIQUE;
+
 CREATE CONSTRAINT resource_id
 IF NOT EXISTS
 FOR (r:LearningResource)

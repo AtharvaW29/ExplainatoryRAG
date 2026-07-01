@@ -65,7 +65,7 @@ async def get_concept(concept_id: UUID, db: AsyncSession = Depends(get_db)):
 
 
 @router.get(
-    "/{concept_name}",
+    "/name/{concept_name}",
     response_model=ConceptResponse,
     status_code=status.HTTP_200_OK,
 )

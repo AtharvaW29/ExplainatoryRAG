@@ -23,7 +23,7 @@ repos:
       - id: mypy
         name: Run mypy
         entry: api/.venv/Scripts/python.exe -m mypy
-        exclude: settings.py
+        exclude: ^settings\.py$|\.cypher$
         language: python
         language_version: "python3"
         types: ["python"]

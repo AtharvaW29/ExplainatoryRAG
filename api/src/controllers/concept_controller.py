@@ -74,7 +74,7 @@ class ConceptController:
         if concept_patch is None:
             raise HTTPException(status_code=400, detail="Bad Request")
 
-        return ConceptPatch.model_validate(concept_patch)
+        return ConceptPatch.model_validate(concept_patch, from_attributes=True)
 
     @staticmethod
     async def delete_concept(
