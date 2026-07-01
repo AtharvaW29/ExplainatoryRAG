@@ -11,7 +11,9 @@ from src.models.user import Base
 from src.routers.concept import router as concept
 from src.routers.concept_mastery import router as concept_mastery
 from src.routers.concept_relationship import router as concept_relationship
+from src.routers.graph import router as graph_router
 from src.routers.learner_profile import router as profile_router
+from src.routers.misconception import router as misconception_router
 from src.routers.users import router as user_router
 
 logger = logging.getLogger("uvicorn.error")
@@ -33,6 +35,8 @@ app.include_router(profile_router)
 app.include_router(concept_mastery)
 app.include_router(concept)
 app.include_router(concept_relationship)
+app.include_router(graph_router)
+app.include_router(misconception_router)
 
 
 @app.get("/")

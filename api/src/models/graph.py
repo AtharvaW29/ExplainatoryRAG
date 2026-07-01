@@ -1,12 +1,20 @@
-from typing import Any
 from uuid import UUID
 
 from neo4j import AsyncSession
 
+from src.schemas.graph import (
+    ConceptDetail,
+    ConceptGraphResponse,
+    ConceptNeighborhoodResponse,
+    GraphEdge,
+    GraphNode,
+    LearningPathResponse,
+)
+
 
 async def db_get_concept_neighborhood(
-    graph: AsyncSession, concept_id: UUID, depth: int = 2
-) -> dict[str, Any] | None:
+    graph: AsyncSession, concept_id: UUID
+) -> ConceptNeighborhoodResponse | None:
     """
     Returns the one-hop neighborhood of a concept.
 
@@ -53,11 +61,9 @@ async def db_get_concept_neighborhood(
         .title
     }) AS misconceptions
     """
-    depth = max(1, min(depth, 5))
     result = await graph.run(
         query,
         concept_id=str(concept_id),
-        depth=depth,
     )
 
     record = await result.single()
@@ -65,20 +71,18 @@ async def db_get_concept_neighborhood(
     if record is None:
         return None
 
-    return dict(record)
+    return ConceptNeighborhoodResponse(**record)
 
 
 async def db_expand_graph(
     graph: AsyncSession,
     concept_id: UUID,
-    depth: int = 2,
-) -> list[dict[str, Any]]:
+) -> ConceptGraphResponse:
     """
     Expands the graph around a concept.
 
     Traverses prerequisite and related relationships.
     """
-    depth = max(1, min(depth, 5))
     query = """
     MATCH p=(c:Concept {id:$concept_id})
         -[:PREREQUISITE_OF|RELATED_TO*1..$depth]-
@@ -90,16 +94,57 @@ async def db_expand_graph(
     result = await graph.run(
         query,
         concept_id=str(concept_id),
-        depth=depth,
     )
+    nodes_map = {}
+    edges_list = []
+    seen_edges = set()
 
-    return await result.data()
+    async for record in result:
+        path = record["p"]
+
+        # Extract Nodes
+        for node in path.nodes:
+            node_id = node.get("id")
+            if node_id and node_id not in nodes_map:
+                nodes_map[node_id] = GraphNode(
+                    id=UUID(node_id),
+                    label=node.get("name", "Unknown Concept"),
+                    node_type=list(node.labels)[0]
+                    if node.labels
+                    else "Concept",
+                    metadata=dict(node),
+                )
+
+        # Extract Edges
+        for rel in path.relationships:
+            start_id = rel.start_node.get("id")
+            end_id = rel.end_node.get("id")
+
+            if not start_id or not end_id:
+                continue
+
+            edge_signature = (start_id, end_id, rel.type)
+            if edge_signature not in seen_edges:
+                seen_edges.add(edge_signature)
+                edges_list.append(
+                    GraphEdge(
+                        source=UUID(start_id),
+                        target=UUID(end_id),
+                        relationship=rel.type,
+                        weight=rel.get("weight"),
+                        confidence=rel.get("confidence"),
+                    )
+                )
+
+    return ConceptGraphResponse(
+        nodes=list(nodes_map.values()), edges=edges_list
+    )
 
 
 async def db_get_learning_path(
     graph: AsyncSession,
     concept_id: UUID,
-) -> list[dict[str, Any]]:
+) -> LearningPathResponse | None:
     """
     Returns a topological learning path
     leading to the requested concept.
@@ -129,6 +174,15 @@ async def db_get_learning_path(
         concept_id=str(concept_id),
     )
 
-    records: list[dict[str, Any]] = await result.data()
+    records = await result.data()
 
-    return records
+    path_nodes = [ConceptDetail(**record) for record in records]
+
+    calculated_difficulty = sum((n.difficulty or 0.0) for n in path_nodes)
+    calculated_time = len(path_nodes) * 15.0
+
+    return LearningPathResponse(
+        path=path_nodes,
+        difficulty_score=calculated_difficulty,
+        estimated_time=calculated_time,
+    )

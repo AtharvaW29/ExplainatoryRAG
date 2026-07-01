@@ -10,6 +10,7 @@ from src.models.graph import (
 )
 from src.schemas.graph import (
     ConceptGraphResponse,
+    ConceptNeighborhoodResponse,
     LearningPathResponse,
 )
 
@@ -19,14 +20,9 @@ class GraphController:
     async def get_concept_neighborhood(
         graph: AsyncSession,
         concept_id: UUID,
-        depth: int = 2,
-    ) -> ConceptGraphResponse:
+    ) -> ConceptNeighborhoodResponse:
 
-        neighborhood = await db_get_concept_neighborhood(
-            graph,
-            concept_id,
-            depth,
-        )
+        neighborhood = await db_get_concept_neighborhood(graph, concept_id)
 
         if neighborhood is None:
             raise HTTPException(
@@ -34,19 +30,17 @@ class GraphController:
                 "Concept not found.",
             )
 
-        return ConceptGraphResponse.model_validate(neighborhood)
+        return ConceptNeighborhoodResponse.model_validate(neighborhood)
 
     @staticmethod
     async def expand_graph(
         graph: AsyncSession,
         concept_id: UUID,
-        hops: int = 3,
     ) -> ConceptGraphResponse:
 
         result = await db_expand_graph(
             graph,
             concept_id,
-            hops,
         )
 
         return ConceptGraphResponse.model_validate(result)
