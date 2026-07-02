@@ -5,12 +5,43 @@ from uuid import UUID
 from neo4j import AsyncSession
 
 from src.schemas.concept_relationship import (
+    ConceptNodeCreate,
     ConceptRelationshipExists,
     ConceptRelationshipRemove,
     RelatedConceptResponse,
 )
 
 RELATIONSHIP_REGEX = re.compile(r"^[a-zA-Z0-9_]+$")
+
+
+async def db_add_concept(
+    graph: AsyncSession,
+    payload: ConceptNodeCreate,
+) -> bool:
+    query = """
+    CREATE (c:Concept {
+        id: $id,
+        name: $name,
+        description: $description,
+        difficulty: $difficulty,
+        domain: $domain,
+        type: $type
+    })
+    RETURN c.id AS id
+    """
+    result = await graph.run(
+        query,
+        id=str(payload.id),
+        name=payload.name,
+        description=payload.description,
+        difficulty=float(payload.difficulty)
+        if payload.difficulty is not None
+        else None,
+        domain=payload.domain,
+        type=payload.concepttype,
+    )
+    record = await result.single()
+    return record is not None
 
 
 async def db_relationship_exists(

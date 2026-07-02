@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from neo4j import AsyncSession
 
 from src.models.concept_relationship import (
+    db_add_concept,
     db_add_prerequisite,
     db_add_related_concept,
     db_get_prerequisites,
@@ -12,6 +13,7 @@ from src.models.concept_relationship import (
     db_remove_relationship,
 )
 from src.schemas.concept_relationship import (
+    ConceptNodeCreate,
     ConceptRelationshipCreate,
     ConceptRelationshipExists,
     ConceptRelationshipRemove,
@@ -20,6 +22,21 @@ from src.schemas.concept_relationship import (
 
 
 class ConceptRelationshipController:
+    @staticmethod
+    async def add_concept(
+        graph: AsyncSession,
+        payload: ConceptNodeCreate,
+    ) -> bool:
+        success = await db_add_concept(graph=graph, payload=payload)
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Unable to create concept.",
+            )
+
+        return True
+
     @staticmethod
     async def add_prerequisite(
         graph: AsyncSession,

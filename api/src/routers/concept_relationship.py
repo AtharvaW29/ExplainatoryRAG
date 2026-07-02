@@ -8,6 +8,7 @@ from src.controllers.concept_relationship_controller import (
 )
 from src.graph.database import get_graph_session
 from src.schemas.concept_relationship import (
+    ConceptNodeCreate,
     ConceptRelationshipCreate,
     ConceptRelationshipExists,
     ConceptRelationshipRemove,
@@ -17,6 +18,21 @@ from src.schemas.concept_relationship import (
 router = APIRouter(
     prefix="/concept-relationship", tags=["Concpet Relationships"]
 )
+
+
+@router.post(
+    "/add-concept",
+    response_model=bool,
+    status_code=status.HTTP_201_CREATED,
+)
+async def add_concept(
+    payload: ConceptNodeCreate,
+    graph: AsyncSession = Depends(get_graph_session),
+) -> bool:
+    """Adds a new concept"""
+    return await ConceptRelationshipController.add_concept(
+        graph=graph, payload=payload
+    )
 
 
 @router.post(
@@ -93,7 +109,7 @@ async def remove_relationship(
     )
 
 
-@router.get("/", status_code=status.HTTP_200_OK, response_model=bool)
+@router.post("/", status_code=status.HTTP_200_OK, response_model=bool)
 async def relationsship_exists(
     payload: ConceptRelationshipExists,
     graph: AsyncSession = Depends(get_graph_session),

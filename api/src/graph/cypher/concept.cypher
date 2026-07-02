@@ -4,6 +4,5 @@ CREATE (:Concept {
     description: "string",
     difficulty: 0.0,
     domain: "string",
-    created_at: datetime(),
-    updated_at: datetime()
+    type: "string",
 })

@@ -3,7 +3,7 @@ from pathlib import Path
 
 from neo4j import AsyncDriver
 
-from src.graph.database import close_graph_driver, driver
+from src.graph.database import driver
 
 GRAPH_ROOT = Path(__file__).resolve().parent.parent
 CYPHER_DIR = GRAPH_ROOT / "cypher"
@@ -74,5 +74,5 @@ async def initialize_graph() -> None:
 
         logger.info("[Neo4j] Graph initialization completed successfully.")
 
-    finally:
-        await close_graph_driver()
+    except Exception as e:
+        logger.error(f"[Neo4j] Error occurred while initializing graph: {e}")

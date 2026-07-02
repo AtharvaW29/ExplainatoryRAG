@@ -1,6 +1,20 @@
+from typing import Literal, Optional
 from uuid import UUID
 
 from pydantic import BaseModel
+
+ConceptType = Literal[
+    "concept",
+    "misconception",
+    "question",
+    "resource",
+    "prerequisite",
+    "related",
+    "prerequisite_of",
+    "related_to",
+    "misconception_of",
+    "misconception_related_to",
+]
 
 
 class ConceptRelationshipCreate(BaseModel):
@@ -28,5 +42,14 @@ class RelatedConceptResponse(BaseModel):
     id: UUID
     name: str
     description: str | None
-    difficulty: str | None
+    difficulty: float | None
     domain: str | None
+
+
+class ConceptNodeCreate(BaseModel):
+    id: UUID
+    name: str
+    concepttype: ConceptType = "concept"
+    description: Optional[str] = None
+    difficulty: Optional[float] = None
+    domain: Optional[str] = None
