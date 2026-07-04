@@ -19,11 +19,11 @@ class UserCreateSchema(BaseModel):
     id: Optional[UUID] = Field(default_factory=uuid4)
     name: str
     email: str
+    password_hash: str
 
 
 class UserPatchSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     name: Optional[str] = None
-    email: Optional[str] = None
     is_active: Optional[bool] = None

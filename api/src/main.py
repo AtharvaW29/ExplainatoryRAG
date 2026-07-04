@@ -8,9 +8,13 @@ from src.database import engine
 from src.graph.database import close_graph_driver
 from src.graph.scripts.init_graph import initialize_graph
 from src.models.user import Base
+from src.routers.auth import router as auth_router
 from src.routers.concept import router as concept
 from src.routers.concept_mastery import router as concept_mastery
 from src.routers.concept_relationship import router as concept_relationship
+from src.routers.explanation_sessions import (
+    router as explanation_sessions_router,
+)
 from src.routers.graph import router as graph_router
 from src.routers.learner_profile import router as profile_router
 from src.routers.misconception import router as misconception_router
@@ -31,6 +35,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.include_router(auth_router)
+app.include_router(explanation_sessions_router)
 app.include_router(user_router)
 app.include_router(profile_router)
 app.include_router(concept_mastery)

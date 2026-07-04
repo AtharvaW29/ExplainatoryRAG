@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import Base
-from src.schemas.user import UserCreateSchema, UserPatchSchema
+from src.schemas.user import UserPatchSchema
 
 
 class User(Base):
@@ -19,7 +19,8 @@ class User(Base):
         server_default=text("gen_random_uuid()"),
     )
     name = Column(String(50), nullable=False)
-    email = Column(String(255), nullable=False, index=True)
+    email = Column(String(255), nullable=False, index=True, unique=True)
+    password_hash = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
 
 
@@ -31,10 +32,16 @@ async def db_get_user_by_email(
     return res.scalar_one_or_none()
 
 
+async def db_get_user_by_id(db: AsyncSession, user_id: UUID) -> User | None:
+    statement = select(User).where(User.id == user_id)
+    res = await db.execute(statement)
+    return res.scalar_one_or_none()
+
+
 async def db_create_user(
-    db: AsyncSession, user_data: UserCreateSchema
+    db: AsyncSession, name: str, email: str, password_hash: str
 ) -> User:
-    new_user = User(**user_data.model_dump())
+    new_user = User(name=name, email=email, password_hash=password_hash)
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)

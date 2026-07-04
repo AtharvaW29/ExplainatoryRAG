@@ -5,7 +5,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class ExplanationSessionCreate(BaseModel):
-    user_id: UUID
     topic: str = Field(..., max_length=255)
 
 

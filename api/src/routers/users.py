@@ -1,24 +1,13 @@
 from uuid import UUID  # type: ignore
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.controllers.user_controller import UserController
 from src.database import get_db
-from src.schemas.user import UserCreateSchema, UserPatchSchema, UserSchema
+from src.schemas.user import UserPatchSchema, UserSchema
 
 router = APIRouter(prefix="/users", tags=["Users"])
-
-
-@router.post(
-    "/create_user",
-    response_model=UserSchema,
-    status_code=status.HTTP_201_CREATED,
-)
-async def create_user(
-    payload: UserCreateSchema, db: AsyncSession = Depends(get_db)
-):
-    return await UserController.create_new_user(db, payload.model_dump())
 
 
 @router.get("/{user_email}", response_model=UserSchema)
