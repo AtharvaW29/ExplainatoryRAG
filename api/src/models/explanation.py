@@ -10,29 +10,96 @@ from sqlalchemy import (
     Text,
     text,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Mapped, mapped_column
 
 from src.database import Base
+from src.schemas.explanation import ExplanationCreate
+
+
+class RetrievalMetaData(Base):
+    __tablename__ = "retrieval_metatdata"
+
+    id = Column(
+        PG_UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        server_default=text("gen_random_uuid()"),
+        nullable=False,
+    )
+    explanation_id = Column(
+        PG_UUID(as_uuid=True), ForeignKey("explanations.id"), nullable=False
+    )
+    source_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0
+    )
+    retrieved_chunks: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0
+    )
+    average_similarity: Mapped[float] = mapped_column(
+        Float, nullable=True, default=0.0
+    )
 
 
 class Explanation(Base):
     __tablename__ = "explanations"
 
     id = Column(
-        UUID(as_uuid=True),
+        PG_UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
         server_default=text("gen_random_uuid()"),
     )
-    session_id = Column(
-        UUID(as_uuid=True),
+    exp_session_id = Column(
+        PG_UUID(as_uuid=True),
         ForeignKey("explanation_sessions.id"),
         nullable=False,
     )
-    model_name = Column(String(100))
-    prompt = Column(Text)
-    generated_explanation = Column(Text)
-    difficulty_score = Column(Float)
-    explanation_style = Column(String(50))
-    token_count = Column(Integer)
-    created_at = Column(DateTime, server_default=text("NOW()"))
+
+    prompt: Mapped[str] = mapped_column(Text, nullable=False)
+
+    generated_explanation: Mapped[str] = mapped_column(Text, nullable=True)
+    difficulty_score: Mapped[float] = mapped_column(Float, nullable=True)
+
+    explanation_style: Mapped[str] = mapped_column(String(100), nullable=True)
+    token_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0
+    )
+
+    llm_provider: Mapped[str] = mapped_column(String(50), nullable=False)
+    llm_model: Mapped[str] = mapped_column(String(50), nullable=True)
+
+    generation_time_ms: Mapped[float] = mapped_column(
+        Float, default=0.0, nullable=False
+    )
+
+    created_at = Column(DateTime, server_default=text("NOW()"), nullable=False)
+    updated_at = Column(DateTime, nullable=True)
+
+
+async def db_create_explanation(
+    db: AsyncSession, payload: ExplanationCreate, exp_session_id: uuid.UUID
+) -> bool:
+    metadata = payload.retrieval
+    filtered_data = payload.model_dump(exclude={"retrieval"})
+    filtered_data["exp_session_id"] = exp_session_id
+    explanation = Explanation(**filtered_data)
+
+    db.add(explanation)
+    await db.flush()
+
+    if metadata is not None:
+        metadata_dict = metadata.model_dump()
+        metadata_dict["explanation_id"] = explanation.id
+        return await db_create_retrieval_metadata(db, metadata_dict)
+    return True
+
+
+async def db_create_retrieval_metadata(
+    db: AsyncSession, payload: dict
+) -> bool:
+    rmd = RetrievalMetaData(**payload)
+    db.add(rmd)
+    await db.flush()
+    return rmd.id is not None

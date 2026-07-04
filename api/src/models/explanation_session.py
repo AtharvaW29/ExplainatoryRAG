@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.database import Base
+from src.models.explanation import db_create_explanation
+from src.schemas.explanation_sessions import ExplanationSessionCreate
 
 
 class ExplanationSession(Base):
@@ -16,21 +18,44 @@ class ExplanationSession(Base):
         default=uuid.uuid4,
         server_default=text("gen_random_uuid()"),
     )
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    topic: Mapped[str] = mapped_column(String(255))
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=False,
+    )
+
+    session_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+
+    topic: Mapped[str] = mapped_column(String(255), nullable=False)
+
     created_at = Column(
         DateTime(timezone=True), server_default=text("NOW()"), nullable=False
     )
 
+    updated_at = Column(DateTime(timezone=True), nullable=True)
 
-async def db_create_session(
-    db: AsyncSession, user_id: UUID, topic: str
-) -> ExplanationSession:
-    new_session = ExplanationSession(user_id=user_id, topic=topic)
-    db.add(new_session)
-    await db.commit()
-    await db.refresh(new_session)
-    return new_session
+
+async def db_create_explanation_session(
+    db: AsyncSession, payload: ExplanationSessionCreate
+) -> bool:
+    try:
+        filtered_data = payload.model_dump(exclude={"explanations"})
+        exp_session = ExplanationSession(**filtered_data)
+
+        db.add(exp_session)
+        await db.flush()
+
+        for e in payload.explanations:
+            res = await db_create_explanation(db, e, exp_session.id)
+            if not res:
+                await db.rollback()
+                return False
+
+        await db.commit()
+        return True
+    except Exception as e:
+        await db.rollback()
+        return False
 
 
 async def db_get_sessions_for_user(
@@ -41,3 +66,6 @@ async def db_get_sessions_for_user(
     )
     res = await db.execute(statement)
     return list(res.scalars().all())
+
+
+# POST /api/v1/explanation-sessions

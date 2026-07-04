@@ -27,12 +27,11 @@ router = APIRouter(
 )
 async def create_explanation_session(
     payload: ExplanationSessionCreate,
-    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
-    user_id = cast(UUID, current_user.id)
-    return await ExplanationSessionController.create_session(
-        db, user_id, payload.topic
+    return await ExplanationSessionController.create_explanation_session(
+        db, payload, cast(UUID, current_user.id)
     )
 
 
