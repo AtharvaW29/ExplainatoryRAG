@@ -16,9 +16,11 @@ class QuestionEmbedding(Base):
 
     embedding = Column(Vector(1536), nullable=False)
 
-    __table_args__ = Index(
-        "idx_question_embedding",
-        embedding,
-        postgresql_using="ivfflat",
-        postgresql_ops={"embedding": "vector_cosine_ops"},
+    __table_args__ = (
+        Index(
+            "idx_question_embedding",
+            embedding,
+            postgresql_using="ivfflat",
+            postgresql_ops={"embedding": "vector_cosine_ops"},
+        ),
     )

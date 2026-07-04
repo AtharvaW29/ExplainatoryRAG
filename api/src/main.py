@@ -4,10 +4,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from src.database import engine
+from src.database import Base, engine
 from src.graph.database import close_graph_driver
 from src.graph.scripts.init_graph import initialize_graph
-from src.models.user import Base
 from src.routers.auth import router as auth_router
 from src.routers.concept import router as concept
 from src.routers.concept_mastery import router as concept_mastery

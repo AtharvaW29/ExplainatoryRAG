@@ -17,6 +17,9 @@ services:
     env_file:
       - ./api/.env
 
+    environment:
+      app_DB_HOST: db
+
     depends_on:
       db:
         condition: service_healthy
@@ -25,7 +28,7 @@ services:
       - app-network
 
   db:
-    image: postgres:16
+    image: pgvector/pgvector:pg16
 
     restart: always
 
