@@ -17,20 +17,24 @@ class Base(DeclarativeBase):
     pass
 
 
-def build_database_url() -> str:
-    configured_url = os.getenv("app_DB_URL")
-    if configured_url:
-        return configured_url
+def _require_env(name: str) -> str:
+    value = os.getenv(name)
+    if value is None:
+        raise RuntimeError(f"Missing required environment variable: {name}")
+    return value
 
-    user = os.getenv("app_DB_USER", "postgres")
-    password = os.getenv("app_DB_PASSWORD", "")
-    host = os.getenv("app_DB_HOST", "localhost")
-    port = os.getenv("app_DB_PORT", "5432")
-    db_name = os.getenv("app_DB", "postgres")
+
+def build_database_url() -> str:
+    user = _require_env("app_DB_USER")
+    password = _require_env("app_DB_PASSWORD")
+    host = _require_env("app_DB_HOST")
+    port = _require_env("app_DB_PORT")
+    db_name = _require_env("app_DB")
 
     return (
         "postgresql+asyncpg://"
-        f"{quote_plus(user)}:{quote_plus(password)}@{host}:{port}/{db_name}"
+        f"{quote_plus(user)}:{quote_plus(password)}"
+        f"@{host}:{port}/{db_name}"
     )
 
 

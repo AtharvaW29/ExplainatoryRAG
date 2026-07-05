@@ -1,4 +1,5 @@
 import uuid
+from typing import cast
 
 from sqlalchemy import (
     Column,
@@ -8,6 +9,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    select,
     text,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
@@ -15,7 +17,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.database import Base
-from src.schemas.explanation import ExplanationCreate
+from src.schemas.explanation import (
+    ExplanationCreate,
+    ExplanationResponse,
+    RetrievalMetadataSchema,
+)
 
 
 class RetrievalMetaData(Base):
@@ -103,3 +109,50 @@ async def db_create_retrieval_metadata(
     db.add(rmd)
     await db.flush()
     return rmd.id is not None
+
+
+async def db_get_explanation(
+    db: AsyncSession,
+    exp_session_id: uuid.UUID,
+) -> list[ExplanationResponse]:
+
+    statement = select(Explanation).where(
+        Explanation.exp_session_id == exp_session_id
+    )
+
+    result = await db.execute(statement)
+    explanations = result.scalars().all()
+
+    response = []
+
+    for explanation in explanations:
+        metadata = await db_metadata_by_exp(db, cast(PG_UUID, explanation.id))
+
+        response.append(
+            ExplanationResponse.model_validate(
+                {
+                    **explanation.__dict__,
+                    "retrieval": metadata,
+                }
+            )
+        )
+
+    return response
+
+
+async def db_metadata_by_exp(
+    db: AsyncSession,
+    explanation_id: PG_UUID,
+) -> RetrievalMetadataSchema | None:
+
+    statement = select(RetrievalMetaData).where(
+        RetrievalMetaData.explanation_id == explanation_id
+    )
+
+    result = await db.execute(statement)
+    metadata = result.scalar_one_or_none()
+
+    if metadata is None:
+        return None
+
+    return RetrievalMetadataSchema.model_validate(metadata)

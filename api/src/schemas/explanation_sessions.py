@@ -9,7 +9,6 @@ from src.schemas.explanation import ExplanationCreate, ExplanationResponse
 
 class ExplanationSessionCreate(BaseModel):
     user_id: UUID
-    session_id: UUID
     topic: str = Field(..., max_length=255)
 
     explanations: list[ExplanationCreate]
@@ -32,8 +31,6 @@ class ExplanationSessionHistoryItem(BaseModel):
 
     id: UUID
     topic: str
-
-    session_id: UUID
 
     created_at: datetime
 

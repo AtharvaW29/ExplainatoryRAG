@@ -5,16 +5,15 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class RetrievalMetadata(BaseModel):
-    explanation_id: UUID
+class RetrievalMetadataSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     source_count: int
     retrieved_chunks: int
     average_similarity: Optional[float] = None
 
 
 class ExplanationCreate(BaseModel):
-    exp_session_id: UUID
-
     prompt: Optional[str] = None
 
     generated_explanation: Optional[str] = None
@@ -27,7 +26,7 @@ class ExplanationCreate(BaseModel):
     llm_model: Optional[str] = None
 
     generation_time_ms: Optional[float] = None
-    retrieval: Optional[RetrievalMetadata] = None
+    retrieval: Optional[RetrievalMetadataSchema] = None
 
 
 class ExplanationResponse(BaseModel):
@@ -49,7 +48,7 @@ class ExplanationResponse(BaseModel):
     llm_model: Optional[str] = None
 
     generation_time_ms: Optional[int]
-    retrieval: Optional[RetrievalMetadata] = None
+    retrieval: Optional[RetrievalMetadataSchema] = None
 
     created_at: datetime
 
@@ -63,4 +62,4 @@ class ExplanationPatch(BaseModel):
     token_count: Optional[int] = None
     generation_time_ms: Optional[float] = None
 
-    updated_at = datetime
+    updated_at: datetime

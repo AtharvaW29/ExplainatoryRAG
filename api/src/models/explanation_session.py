@@ -6,8 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.database import Base
-from src.models.explanation import db_create_explanation
-from src.schemas.explanation_sessions import ExplanationSessionCreate
+from src.models.explanation import db_create_explanation, db_get_explanation
+from src.schemas.explanation_sessions import (
+    ExplanationSessionCreate,
+    ExplanationSessionHistory,
+    ExplanationSessionHistoryItem,
+    ExplanationSessionResponse,
+)
 
 
 class ExplanationSession(Base):
@@ -23,8 +28,6 @@ class ExplanationSession(Base):
         ForeignKey("users.id"),
         nullable=False,
     )
-
-    session_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
 
     topic: Mapped[str] = mapped_column(String(255), nullable=False)
 
@@ -58,14 +61,52 @@ async def db_create_explanation_session(
         return False
 
 
-async def db_get_sessions_for_user(
-    db: AsyncSession, user_id: UUID
-) -> list[ExplanationSession]:
+async def db_get_exp_sessions_for_user(
+    db: AsyncSession,
+    user_id: UUID,
+) -> ExplanationSessionHistory | None:
+
     statement = select(ExplanationSession).where(
         ExplanationSession.user_id == user_id
     )
-    res = await db.execute(statement)
-    return list(res.scalars().all())
+
+    result = await db.execute(statement)
+    sessions = result.scalars().all()
+
+    if not sessions:
+        return None
+
+    return ExplanationSessionHistory(
+        sessions=[
+            ExplanationSessionHistoryItem.model_validate(session)
+            for session in sessions
+        ]
+    )
 
 
-# POST /api/v1/explanation-sessions
+async def db_get_exp_session_by_id(
+    db: AsyncSession,
+    exp_session_id: UUID,
+) -> ExplanationSessionResponse | None:
+
+    statement = select(ExplanationSession).where(
+        ExplanationSession.id == exp_session_id
+    )
+
+    result = await db.execute(statement)
+    exp_session = result.scalar_one_or_none()
+
+    if exp_session is None:
+        return None
+
+    explanations = await db_get_explanation(
+        db,
+        exp_session.id,
+    )
+
+    return ExplanationSessionResponse.model_validate(
+        {
+            **exp_session.__dict__,
+            "explanations": explanations,
+        }
+    )
