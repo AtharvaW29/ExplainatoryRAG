@@ -1,3 +1,4 @@
+from typing import cast
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -5,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.controllers.learner_profile_controller import LearnerProfileController
 from src.database import get_db
+from src.dependencies.auth import get_current_user
+from src.models.user import User
 from src.schemas.learner_profile import (
     LearnerPreferencesResponse,
     LearnerProfileCreate,
@@ -21,8 +24,15 @@ router = APIRouter(prefix="/learner_profile", tags=["Learner Profile"])
     status_code=status.HTTP_201_CREATED,
 )
 async def create_learner_profile(
-    payload: LearnerProfileCreate, db: AsyncSession = Depends(get_db)
+    payload: LearnerProfileCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Resource Access Not Allowed",
+        )
     return await LearnerProfileController.create_profile(
         db, payload.model_dump()
     )
@@ -30,9 +40,17 @@ async def create_learner_profile(
 
 @router.get("/{user_id}", response_model=LearnerProfileResponse)
 async def fetch_learner_profile(
-    user_id: UUID, db: AsyncSession = Depends(get_db)
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
-    profile = await LearnerProfileController.fetch_profile(db, user_id)
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Resource Access Not Allowed",
+        )
+    profile = await LearnerProfileController.fetch_profile(
+        db, cast(UUID, current_user.id)
+    )
     if not profile:
         raise HTTPException(status_code=404, detail="Profile Not Found")
     return profile
@@ -42,8 +60,14 @@ async def fetch_learner_profile(
 async def patch_profile(
     user_id: UUID,
     payload: LearnerProfilePatch,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Resource Access Not Allowed",
+        )
     return await LearnerProfileController.patch_profile(db, user_id, payload)
 
 
@@ -51,8 +75,15 @@ async def patch_profile(
     "/{user_id}/preferences", response_model=LearnerPreferencesResponse
 )
 async def fetch_profile_preferences(
-    user_id: UUID, db: AsyncSession = Depends(get_db)
+    user_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Resource Access Not Allowed",
+        )
     pref = await LearnerProfileController.fetch_preferences(db, user_id)
     if not pref:
         raise HTTPException(status_code=404, detail="No Preferences Found")

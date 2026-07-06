@@ -1,6 +1,8 @@
+from typing import cast
 from uuid import UUID
 
 from fastapi import HTTPException, status
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.learner_profile import (
@@ -40,7 +42,7 @@ class LearnerProfileController:
         db: AsyncSession, user_id: UUID
     ) -> LearnerProfileResponse:
 
-        profile = await db_get_learnerprofile(db, user_id)
+        profile = await db_get_learnerprofile(db, cast(PG_UUID, user_id))
 
         if not profile:
             raise HTTPException(404, "Profile not found")

@@ -30,7 +30,7 @@ async def create_explanation_session(
     payload: ExplanationSessionCreate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> bool:
     return await ExplanationSessionController.create_explanation_session(
         db, payload, cast(UUID, current_user.id)
     )

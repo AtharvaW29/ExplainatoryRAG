@@ -17,7 +17,7 @@ class ExplanationCreate(BaseModel):
     prompt: Optional[str] = None
 
     generated_explanation: Optional[str] = None
-    difficulty_score: Optional[float] = None
+    difficulty_score: Optional[float] = Field(None, ge=1, le=10)
 
     explanation_style: Optional[str] = Field(None, max_length=50)
     token_count: Optional[int] = Field(None, ge=0)

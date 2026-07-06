@@ -14,6 +14,7 @@ from src.routers.concept_relationship import router as concept_relationship
 from src.routers.explanation_sessions import (
     router as explanation_sessions_router,
 )
+from src.routers.feedback import router as feedback_router
 from src.routers.graph import router as graph_router
 from src.routers.learner_profile import router as profile_router
 from src.routers.misconception import router as misconception_router
@@ -35,9 +36,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(auth_router)
-app.include_router(explanation_sessions_router)
 app.include_router(user_router)
 app.include_router(profile_router)
+app.include_router(explanation_sessions_router)
+app.include_router(feedback_router)
 app.include_router(concept_mastery)
 app.include_router(concept)
 app.include_router(concept_relationship)

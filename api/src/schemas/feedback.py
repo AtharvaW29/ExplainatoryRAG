@@ -27,3 +27,13 @@ class FeedbackResponse(BaseModel):
     correctness_score: Optional[int]
     comments: Optional[str]
     created_at: datetime
+
+
+class FeedbackPatch(BaseModel):
+    rating: Optional[int] = Field(
+        None, ge=1, le=5
+    )  # Limits scores from 1 to 5
+    clarity_score: Optional[int] = Field(None, ge=1, le=5)
+    usefulness_score: Optional[int] = Field(None, ge=1, le=5)
+    correctness_score: Optional[int] = Field(None, ge=1, le=5)
+    comments: Optional[str] = None

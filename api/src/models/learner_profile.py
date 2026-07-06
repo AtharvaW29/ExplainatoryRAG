@@ -53,7 +53,7 @@ class LearnerProfile(Base):
 
 
 async def db_get_learnerprofile(
-    db: AsyncSession, user_id: UUID
+    db: AsyncSession, user_id: PG_UUID
 ) -> LearnerProfile | None:
     statement = select(LearnerProfile).where(LearnerProfile.user_id == user_id)
     res = await db.execute(statement)
