@@ -17,13 +17,16 @@ repos:
     hooks:
       - id: ruff-check
         args: [--fix]
+        exclude: (?x)^(.*alembic/.*|.*alembic\\.*)
       - id: ruff-format
+        exclude: (?x)^(.*alembic/.*|.*alembic\\.*)
+
   - repo: local
     hooks:
       - id: mypy
         name: Run mypy
         entry: api/.venv/Scripts/python.exe -m mypy
-        exclude: (?x)^(settings\.py$|\.cypher$|.*alembic[/\\])
+        exclude: (?x)^(settings\.py$|\.cypher$|.*alembic/.*|.*alembic\\.*)
         language: python
         language_version: "python3"
         types: ["python"]

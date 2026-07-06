@@ -8,6 +8,19 @@ from alembic import context
 from src.database import DATABASE_URL, Base
 
 # Import all application models so Alembic/autogenerate can discover them.
+from src.models.user import User
+from src.models.chunk_embedding import ChunkEmbedding
+from src.models.concept import Concept
+from src.models.concept_mastery import ConceptMastery
+from src.models.document_chunks import DocumentChunk
+from src.models.evaluation import Evaluation
+from src.models.explanation_session import ExplanationSession
+from src.models.explanation import Explanation
+from src.models.explanation import RetrievalMetaData
+from src.models.feedback import Feedback
+from src.models.knowledge_sources import KnowledgeSource
+from src.models.learner_profile import LearnerProfile
+from src.models.question_embedding import QuestionEmbedding
 
 config = context.config
 
