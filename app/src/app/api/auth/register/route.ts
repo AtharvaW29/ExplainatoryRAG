@@ -1,10 +1,10 @@
 import { NextResponse, NextRequest } from "next/server";
-import { $API_URL } from "@/lib/constants";
+import { buildApiUrl } from "@/lib/constants";
 
 export async function POST(req: NextRequest) {
     const body = await req.json();
 
-    const fastApiRes = await fetch(`${$API_URL}/auth/register`, {
+    const fastApiRes = await fetch(buildApiUrl("/auth/register"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),

@@ -1,58 +1,20 @@
-"use client";
-
-import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { LoginForm } from "./LoginForm";
 
 export default function LoginPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-    setSubmitting(true);
-
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    setSubmitting(false);
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(data.message ?? "Login failed");
-      return;
-    }
-
-    router.push("/dashboard");
-    router.refresh();
-  }
-
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Email"
-        required
-      />
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
-        required
-      />
-      {error && <p role="alert">{error}</p>}
-      <button type="submit" disabled={submitting}>
-        {submitting ? "Logging in..." : "Log in"}
-      </button>
-    </form>
+    <main className="min-h-screen bg-slate-50 px-6 py-16 sm:px-8 lg:px-10">
+      <section className="mx-auto max-w-2xl">
+        <div className="mb-10 rounded-3xl border border-slate-200 bg-white p-10 shadow-sm">
+          <LoginForm />
+          <div className="mt-6 text-center text-sm text-slate-600">
+            Don&apos;t have an account?{' '}
+            <Link href="/register" className="font-semibold text-indigo-600 hover:text-indigo-700">
+              Create one here.
+            </Link>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }

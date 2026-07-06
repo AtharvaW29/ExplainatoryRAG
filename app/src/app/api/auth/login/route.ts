@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { $SESSION_COOKIE, $API_URL } from "@/lib/constants";
+import { $SESSION_COOKIE, buildApiUrl } from "@/lib/constants";
 
 export async function POST(req: NextRequest) {
     const body = await req.json();
 
-    const response = await fetch(`${$API_URL}/auth/login`, {
+    const response = await fetch(buildApiUrl("/auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
