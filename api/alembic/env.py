@@ -21,6 +21,7 @@ from src.models.feedback import Feedback
 from src.models.knowledge_sources import KnowledgeSource
 from src.models.learner_profile import LearnerProfile
 from src.models.question_embedding import QuestionEmbedding
+from src.models.explaination_embedding import ExplainationEmbedding
 
 config = context.config
 
