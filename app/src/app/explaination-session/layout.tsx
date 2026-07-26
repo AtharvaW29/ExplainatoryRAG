@@ -1,14 +1,15 @@
 import { redirect } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import { getSessionToken } from "@/lib/session";
+import { ChatShell } from "./ChatShell";
 
-interface DashboardLayoutProps {
+interface ChatLayoutProps {
   children: React.ReactNode;
 }
 
-export default async function DashboardLayout({
+export default async function ChatLayout({
   children,
-}: DashboardLayoutProps) {
+}: ChatLayoutProps) {
   const token = await getSessionToken();
 
   if (!token) {
@@ -21,9 +22,5 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  return (
-    <div className="min-h-dvh bg-white text-zinc-900 antialiased dark:bg-[#212121] dark:text-zinc-100">
-      {children}
-    </div>
-  );
+  return <ChatShell>{children}</ChatShell>;
 }
