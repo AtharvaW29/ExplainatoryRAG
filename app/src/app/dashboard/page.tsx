@@ -1,4 +1,4 @@
-import { StartNewSessionButton } from "@/components/chat/StartNewSessionButton";
+import { StartNewSessionButton } from "@/components/chat";
 import { OverviewCard, SessionList } from "@/components/dashboard";
 import { listSessions } from "@/features/sessions";
 import { DashboardHeader } from "./DashboardHeader";
