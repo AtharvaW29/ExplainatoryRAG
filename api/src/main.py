@@ -19,6 +19,7 @@ from src.routers.graph import router as graph_router
 from src.routers.learner_profile import router as profile_router
 from src.routers.misconception import router as misconception_router
 from src.routers.users import router as user_router
+from src.websocket.manager import WebSocketManager
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -29,9 +30,14 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
     await initialize_graph()
     logger.info("Both Databases Configured and Connected Successfully!")
-    yield
-    logger.info("gracefully shutting down the application...")
-    await close_graph_driver()
+    manager = WebSocketManager(queue_size=100)
+    app.state.websocket_manager = manager
+    try:
+        yield
+        logger.info("gracefully shutting down the application...")
+    finally:
+        await close_graph_driver()
+        await manager.shutdown()
 
 
 app = FastAPI(lifespan=lifespan)
