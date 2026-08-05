@@ -75,6 +75,9 @@ exclude = [
     '(^|/)alembic/',
 ]
 
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
 [[tool.mypy.overrides]]
 module = "alembic.*"
 ignore_errors = true

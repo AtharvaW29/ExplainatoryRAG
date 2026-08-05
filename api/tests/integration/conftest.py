@@ -3,13 +3,14 @@ import subprocess
 import sys
 from collections.abc import AsyncGenerator, Generator
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Iterator, Protocol
 from urllib.parse import quote_plus
 
 import psycopg2
 import pytest
 import pytest_asyncio
 from dotenv import load_dotenv
+from fastapi.testclient import TestClient
 from httpx import ASGITransport, AsyncClient
 from psycopg2 import sql
 from sqlalchemy.ext.asyncio import (
@@ -17,9 +18,10 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+from starlette.testclient import WebSocketTestSession
 
 API_ROOT = Path(__file__).resolve().parents[2]
-
+print(API_ROOT)
 load_dotenv(API_ROOT / ".env")
 
 # os.environ.setdefault("app_DB_USER", "user")
@@ -106,18 +108,47 @@ def run_alembic(
     database_name: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
     environment = os.environ.copy()
+
     if database_name is not None:
         _ensure_test_database_name(database_name)
-        environment["app_DB_TEST"] = database_name
 
-    return subprocess.run(
-        [sys.executable, "-m", "alembic", *arguments],
+        environment["app_DB_TEST"] = database_name
+        environment["ALEMBIC_DATABASE_URL"] = _async_database_url(
+            database_name
+        )
+
+    command = [
+        sys.executable,
+        "-m",
+        "alembic",
+        *arguments,
+    ]
+
+    result = subprocess.run(
+        command,
         cwd=API_ROOT,
         env=environment,
-        check=True,
+        check=False,
         capture_output=True,
         text=True,
     )
+
+    if result.returncode != 0:
+        raise RuntimeError(
+            "\nAlembic command failed.\n"
+            f"Command: {' '.join(command)}\n"
+            f"Working directory: {API_ROOT}\n"
+            f"Test database: {database_name or '<not overridden>'}\n"
+            f"Exit code: {result.returncode}\n"
+            "\n"
+            "----- Alembic stdout -----\n"
+            f"{result.stdout.strip() or '<empty>'}\n"
+            "\n"
+            "----- Alembic stderr -----\n"
+            f"{result.stderr.strip() or '<empty>'}\n"
+        )
+
+    return result
 
 
 def _truncate_application_tables(database_name: str) -> None:
@@ -165,12 +196,50 @@ def _async_database_url(database_name: str) -> str:
     )
 
 
-@pytest.fixture(scope="session", autouse=True)
-def migrated_test_database() -> Generator[str, None, None]:
+def dispose_test_database_connections() -> None:
+    """Dispose of all connections to the test database.
+
+    This is necessary before dropping the database, as PostgreSQL does not
+    allow dropping a database with active connections.
+    """
     database_name = _database_name()
+    _ensure_test_database_name(database_name)
+
+    connection = _admin_connection()
+    try:
+        connection.autocommit = True
+        with connection.cursor() as cursor:
+            cursor.execute(
+                sql.SQL(
+                    """
+                    SELECT pg_terminate_backend(pid)
+                    FROM pg_stat_activity
+                    WHERE datname = %s
+                      AND pid <> pg_backend_pid()
+                    """
+                ),
+                (database_name,),
+            )
+    finally:
+        connection.close()
+
+
+@pytest.fixture(scope="session")
+def migrated_test_database() -> Iterator[str]:
+    database_name = "explainatory_rag_test"
+
     recreate_database(database_name)
-    run_alembic("upgrade", "head", database_name=database_name)
-    yield database_name
+
+    try:
+        run_alembic(
+            "upgrade",
+            "head",
+            database_name=database_name,
+        )
+        yield database_name
+    finally:
+        dispose_test_database_connections()
+        drop_database(database_name)
 
 
 @pytest.fixture(autouse=True)
@@ -261,3 +330,30 @@ def user_factory(client: AsyncClient) -> UserFactory:
         }
 
     return create_user
+
+
+@pytest.fixture
+def websocket_client(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> Generator[TestClient, None, None]:
+    async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
+        async with session_factory() as session:
+            yield session
+
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        with TestClient(app) as test_client:
+            yield test_client
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def chat_websocket(
+    websocket_client: TestClient,
+) -> Generator[WebSocketTestSession, None, None]:
+    with websocket_client.websocket_connect(
+        "/explanation-sessions/start_exp_session",
+        subprotocols=["llm-chat.v1"],
+    ) as websocket:
+        yield websocket

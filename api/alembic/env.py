@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 from src.database import DATABASE_URL, Base
 
+import os
+
 # Import all application models so Alembic/autogenerate can discover them.
 from src.models.user import User
 from src.models.chunk_embedding import ChunkEmbedding
@@ -31,6 +33,13 @@ if config.config_file_name is not None:
 if DATABASE_URL:
     config.set_main_option("sqlalchemy.url", DATABASE_URL.replace("%", "%%"))
 
+explicit_database_url = os.getenv("ALEMBIC_DATABASE_URL")
+
+if explicit_database_url:
+    config.set_main_option(
+        "sqlalchemy.url",
+        explicit_database_url.replace("%", "%%"),
+    )
 # Alembic needs the shared metadata from your declarative base.
 target_metadata = Base.metadata
 
